@@ -15,6 +15,9 @@ start:
    call check_cpuid
    call check_long_mode
 
+   call setup_paging_tables
+   call enable_paging
+
    call mezzo
    hlt
 
@@ -107,7 +110,66 @@ check_long_mode:
       mov ax, '03'
       jmp error
 
+; fn setup_paging_tables()
+;   map p4 -> p3 -> p2 -> physical
+setup_paging_tables:
+   mov eax, p3_table   ; mark p3 as writable and present, and
+   or  eax, 0b11       ; add it as the first entry in p4
+   mov [p4_table], eax ;
+
+   mov eax, p2_table   ; the same for p2 in p3
+   or  eax, 0b11       ;
+   mov [p3_table], eax ;
+
+   ; identity map each p2 entry as a 2mib frame (512 * 2mib = 1gib)
+   mov ecx, 0x0
+   .map_p2_entries:
+      mov eax, 0x200000
+      mul ecx
+      or  eax, 0x83    ; huge + writable + present
+      mov [p2_table + (ecx * 8)], eax
+
+      inc ecx
+      cmp ecx, 512
+      jb  .map_p2_entries
+
+   ret
+
+; fn enable_paging()
+;   set various bits to enter long mode and enable paging
+enable_paging:
+   ; map cr3 to p4 paging table
+   mov eax, p4_table
+   mov cr3, eax
+
+   ; set "physical address extended" bit of cr4
+   mov eax, cr4
+   or  eax, 1 << 5
+   mov cr4, eax
+
+   ; set "long mode" bit of "extended feature enable register"
+   mov ecx, 0xC0000080
+   rdmsr
+   or eax, 1 << 8
+   wrmsr
+
+   ; set "paging" bit in the cr0 register
+   mov eax, cr0
+   or eax, 1 << 31
+   mov cr0, eax
+
+   ret
+
 section .bss
+align 4096
+
+p4_table:
+   resb 4096
+p3_table:
+   resb 4096
+p2_table:
+   resb 4096
+
 stack_bottom:
    resb 64
 stack_top:
