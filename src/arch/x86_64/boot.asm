@@ -2,11 +2,13 @@
 
 global start
 
+extern long_mode_start
+
 section .text
 bits 32
 
 ; fn start()
-;   setup stack, check system, setup paging, call into rust
+;   setup stack, check system, setup paging, enter long mode
 start:
    mov esp, stack_top
    call clear
@@ -15,10 +17,12 @@ start:
    call check_cpuid
    call check_long_mode
 
+   call mezzo
+
    call setup_paging_tables
    call enable_paging
 
-   call mezzo
+   call enter_long_mode
    hlt
 
 ; fn clear()
@@ -36,7 +40,7 @@ clear:
    ret
 
 ; fn mezzo()
-;   print '(mezzo)' and halt
+;   print '(mezzo)'
 mezzo:
    mov dword [0xb80a4], 0x096d0728
    mov dword [0xb80a8], 0x097a0965
@@ -160,6 +164,18 @@ enable_paging:
 
    ret
 
+; fn enter_long_mode()
+;   load the global descriptor table and setup selectors then jump to long mode
+enter_long_mode:
+   lgdt [gdt64.pointer]
+
+   mov ax, gdt64.data
+   mov ss, ax
+   mov ds, ax
+   mov es, ax
+
+   jmp gdt64.code:long_mode_start
+
 section .bss
 align 4096
 
@@ -173,3 +189,20 @@ p2_table:
 stack_bottom:
    resb 64
 stack_top:
+
+section .rodata
+
+gdt64:
+   dq 0                ; zero entry
+
+   ; code segment: descriptor + present + reads + executable + page limit
+   .code: equ $ - gdt64
+      dq   (1 << 44) | (1 << 47) | (1 << 41) | (1 << 43) | (1 << 53)
+
+   ; data segment: descriptor + present + writes
+   .data: equ $ - gdt64
+      dq   (1 << 44) | (1 << 47) | (1 << 41)
+
+   .pointer:
+      dw $ - gdt64 - 1
+      dq gdt64
