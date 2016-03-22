@@ -15,12 +15,14 @@ start:
 
    call check_multiboot
    call check_cpuid
+   call check_sse
    call check_long_mode
 
    call mezzo
 
    call setup_paging_tables
    call enable_paging
+   call enable_sse
 
    call enter_long_mode
    hlt
@@ -96,6 +98,19 @@ check_cpuid:
       mov ax, '02'
       jmp error
 
+; fn check_sse()
+;   verify that processor supports sse
+check_sse:
+   mov eax, 0x1        ; cpuid: return processor info and feature bits
+   cpuid
+   test edx, 1 << 25
+   jz .no_sse
+   ret
+
+   .no_sse:
+      mov al, "03"
+      jmp error
+
 ; fn check_long_mode()
 ;   verify that processor supports long mode
 check_long_mode:
@@ -111,7 +126,7 @@ check_long_mode:
    ret
 
    .no_long_mode:
-      mov ax, '03'
+      mov ax, '04'
       jmp error
 
 ; fn setup_paging_tables()
@@ -140,7 +155,7 @@ setup_paging_tables:
    ret
 
 ; fn enable_paging()
-;   set various bits to enter long mode and enable paging
+;   set various bits to enable long mode and paging
 enable_paging:
    ; map cr3 to p4 paging table
    mov eax, p4_table
@@ -152,7 +167,7 @@ enable_paging:
    mov cr4, eax
 
    ; set "long mode" bit of "extended feature enable register"
-   mov ecx, 0xC0000080
+   mov ecx, 0xc0000080
    rdmsr
    or eax, 1 << 8
    wrmsr
@@ -163,6 +178,19 @@ enable_paging:
    mov cr0, eax
 
    ret
+
+; fn enable_sse
+;   set various bits to enable sse
+enable_sse:
+    mov eax, cr0
+    and ax, 0xfffb     ; clear coprocessor emulation cr0.em
+    or ax, 0x2         ; set coprocessor monitoring  cr0.mp
+    mov cr0, eax
+    mov eax, cr4
+    or ax, 0b11 << 9   ; set cr4.osfxsr and cr4.osxmmexcpt at the same time
+    mov cr4, eax
+
+    ret
 
 ; fn enter_long_mode()
 ;   load the global descriptor table and setup selectors then jump to long mode

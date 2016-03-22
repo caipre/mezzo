@@ -1,0 +1,10 @@
+[package]
+name = "mezzo"
+version = "0.1.0"
+authors = ["Nick Platt <platt.nicholas@gmail.com>"]
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+rlibc = "1.0.0"

@@ -1,5 +1,7 @@
 arch ?= x86_64
+target ?= $(arch)-unknown-linux-gnu
 kernel := build/kernel-$(arch).bin
+mezzo := target/$(target)/debug/libmezzo.a
 iso := build/os-$(arch).iso
 
 linker_script := src/arch/$(arch)/linker.ld
@@ -25,8 +27,11 @@ $(iso): $(kernel) $(grub_cfg)
 	@grub-mkrescue -o $(iso) build/isofiles 2>/dev/null
 	@rm -r build/isofiles
 
-$(kernel): $(assembly_objects) $(linker_script)
-	@ld --nmagic --script $(linker_script) -o $(kernel) $(assembly_objects)
+$(kernel): cargo $(mezzo) $(assembly_objects) $(linker_script)
+	@ld --nmagic --script $(linker_script) --gc-sections -o $(kernel) $(assembly_objects) $(mezzo)
+
+cargo:
+	@cargo rustc --target $(target) -- -Z no-landing-pads -C no-redzone
 
 build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm
 	@mkdir -p $(shell dirname $@)
