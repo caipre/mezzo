@@ -94,6 +94,7 @@ pub trait AlignCol {
 
 pub struct Writer {
     row: usize, col: usize,
+    color_spec: ColorSpec,
     buffer: Unique<VgaBuffer>,
 }
 
@@ -103,6 +104,7 @@ impl Writer {
     const fn new() -> Writer {
         Writer {
             row: 0, col: 0,
+            color_spec: ColorSpec::default(),
             buffer: unsafe { Unique::new(VgaBuffer::buffer()) },
         }
     }
@@ -112,13 +114,25 @@ impl Writer {
         self.col = min(col, BUFFER_COLS - 1);
     }
 
+    pub fn clear(&mut self) {
+        for row in 0..(BUFFER_ROWS - 1) {
+            self.row = row;
+            self.clear_row();
+        }
+        self.move_cursor(0, 0);
+    }
+
+    pub fn set_color(&mut self, spec: ColorSpec) {
+        self.color_spec = spec;
+    }
+
     fn write_byte(&mut self, byte: u8, spec: Option<ColorSpec>) {
         match byte {
             b'\n' => self.new_line(),
             byte => {
                 self.buffer().chars[self.row][self.col] = VgaChar {
                     char: byte,
-                    spec: spec.unwrap_or(ColorSpec::default()),
+                    spec: spec.unwrap_or(self.color_spec),
                 };
                 self.col += 1;
                 if self.col >= BUFFER_COLS {
@@ -182,5 +196,17 @@ impl ::core::fmt::Write for Writer {
         }
         Ok(())
     }
+}
+
+macro_rules! println {
+    ($fmt:expr) => (print!(concat!($fmt, "\n")));
+    ($fmt:expr, $($arg:tt)*) => (print!(concat!($fmt, "\n"), $($arg)*));
+}
+
+macro_rules! print {
+    ($($arg:tt)*) => ({
+        use core::fmt::Write;
+        $crate::vga::WRITER.lock().write_fmt(format_args!($($arg)*)).unwrap();
+    });
 }
 
