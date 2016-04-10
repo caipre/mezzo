@@ -11,6 +11,7 @@ bits 32
 ;   setup stack, check system, setup paging, enter long mode
 start:
    mov esp, stack_top
+   mov edi, ebx        ; pass multiboot info pointer as arg to rust
    call clear
 
    call check_multiboot
@@ -108,7 +109,7 @@ check_sse:
    ret
 
    .no_sse:
-      mov al, "03"
+      mov ax, "03"
       jmp error
 
 ; fn check_long_mode()
@@ -215,7 +216,7 @@ p2_table:
    resb 4096
 
 stack_bottom:
-   resb 64
+   resb 4096
 stack_top:
 
 section .rodata
