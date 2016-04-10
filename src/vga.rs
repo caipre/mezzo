@@ -5,6 +5,8 @@ use core::ptr::Unique;
 use core::option::Option;
 use core::ops::{Index, IndexMut};
 
+use spin::Mutex;
+
 const BUFFER_ROWS: usize = 25;
 const BUFFER_COLS: usize = 80;
 
@@ -73,6 +75,7 @@ impl IndexMut<usize> for VgaBuffer {
     }
 }
 
+#[allow(dead_code)]
 pub enum Align {
     Top,
     Center,
@@ -94,8 +97,10 @@ pub struct Writer {
     buffer: Unique<VgaBuffer>,
 }
 
+pub static WRITER: Mutex<Writer> = Mutex::new(Writer::new());
+
 impl Writer {
-    pub const fn new() -> Writer {
+    const fn new() -> Writer {
         Writer {
             row: 0, col: 0,
             buffer: unsafe { Unique::new(VgaBuffer::buffer()) },

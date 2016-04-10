@@ -5,8 +5,8 @@
 #![feature(lang_items)]
 #![feature(unique)]
 
-
 extern crate rlibc;
+extern crate spin;
 
 mod vga;
 
@@ -23,10 +23,11 @@ extern fn panic_fmt() -> ! {loop{}}
 #[no_mangle]
 pub extern fn __main__() {
     let str = "welcome to mezzo";
-    let mut writer = vga::Writer::new();
-    writer.move_cursor(Writer::rowalign(vga::Align::Center),
-                       Writer::colalign(vga::Align::Center, str));
-    write!(writer, "{}", str);
-
+    {
+        let mut writer = vga::WRITER.lock();
+        writer.move_cursor(Writer::rowalign(vga::Align::Center),
+                           Writer::colalign(vga::Align::Center, str));
+        write!(writer, "{}", str);
+    }
     loop {}
 }
