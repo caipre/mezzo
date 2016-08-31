@@ -31,7 +31,7 @@ $(kernel): cargo $(mezzo) $(assembly_objects) $(linker_script)
 	@ld --nmagic --script $(linker_script) --gc-sections -o $(kernel) $(assembly_objects) $(mezzo)
 
 cargo:
-	@cargo rustc --target $(target) -- -Z no-landing-pads -C no-redzone
+	@cargo rustc --target $(target) -- -C no-redzone
 
 build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm
 	@mkdir -p $(shell dirname $@)
