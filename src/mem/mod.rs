@@ -19,5 +19,5 @@ impl Frame {
 
 pub trait FrameAllocator {
     fn alloc(&mut self) -> Option<Frame>;
-    fn free(&mut self, frame: Frame); //-
+    fn free(&mut self, frame: Frame);
 }

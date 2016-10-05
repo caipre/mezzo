@@ -1,4 +1,4 @@
-; entrypoint from kernel into long mode
+; entrypoint from assembly into long mode
 
 global long_mode_start
 

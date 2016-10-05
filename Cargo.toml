@@ -7,8 +7,8 @@ authors = ["Nick Platt <platt.nicholas@gmail.com>"]
 crate-type = ["staticlib"]
 
 [dependencies]
-rlibc = "1.0.0"
-spin = "0.3.5"
+rlibc = "^1.0.0"
+spin = "^0.3.5"
 multiboot2  = { git = "https://github.com/phil-opp/multiboot2-elf64" }
 
 [profile.dev]

@@ -1,4 +1,3 @@
-use core::option::Option;
 use core::ops::Range;
 
 use mem::{Frame, FrameAllocator};
