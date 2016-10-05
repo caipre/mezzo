@@ -6,9 +6,35 @@ use multiboot2::{MemoryArea, MemoryAreaIter};
 pub struct AreaFrameAllocator {
     area: Option<&'static MemoryArea>,
     areas: MemoryAreaIter,
-    next_frame: Frame,
+    next: Frame,
     kernel: Range<Frame>,
     multiboot: Range<Frame>,
+}
+
+impl FrameAllocator for AreaFrameAllocator {
+    fn alloc(&mut self) -> Option<Frame> {
+        if let Some(area) = self.area {
+            let frame = Frame { number: self.next.number };
+
+            let last_frame = {
+                let last_address = area.base_addr + area.length - 1;
+                Frame::containing(last_address as usize)
+            };
+
+            if frame > last_frame {
+                self.select_next_area();
+                return self.alloc();
+            } else {
+                self.next.number += 1;
+                return Some(frame);
+            }
+        }
+        None
+    }
+
+    fn free(&mut self, _frame: Frame) {
+        unimplemented!()
+    }
 }
 
 impl AreaFrameAllocator {
@@ -19,7 +45,7 @@ impl AreaFrameAllocator {
         let mut allocator = AreaFrameAllocator {
             area: None,
             areas: memory_areas,
-            next_frame: Frame::containing(0),
+            next: Frame::containing(0),
             kernel: Range {
                 start: Frame::containing(kernel_start),
                 end: Frame::containing(kernel_end)
@@ -40,7 +66,7 @@ impl AreaFrameAllocator {
                     let last_address = area.base_addr + area.length - 1;
                     let frame = Frame::containing(last_address as usize);
 
-                    frame >= self.next_frame
+                    frame >= self.next
                     && !(self.kernel.start.number..(self.kernel.end.number)).contains(frame.number)
                     && !(self.multiboot.start.number..(self.multiboot.end.number)).contains(frame.number)
                 })
@@ -48,35 +74,9 @@ impl AreaFrameAllocator {
 
         if let Some(area) = self.area {
             let first_frame = Frame::containing(area.base_addr as usize);
-            if self.next_frame < first_frame {
-                self.next_frame = first_frame;
+            if self.next < first_frame {
+                self.next = first_frame;
             }
         }
-    }
-}
-
-impl FrameAllocator for AreaFrameAllocator {
-    fn alloc(&mut self) -> Option<Frame> {
-        if let Some(area) = self.area {
-            let frame = Frame { number: self.next_frame.number };
-
-            let last_frame = {
-                let last_address = area.base_addr + area.length - 1;
-                Frame::containing(last_address as usize)
-            };
-
-            if frame > last_frame {
-                self.select_next_area();
-                return self.alloc();
-            } else {
-                self.next_frame.number += 1;
-                return Some(frame);
-            }
-        }
-        None
-    }
-
-    fn free(&mut self, _frame: Frame) {
-        unimplemented!()
     }
 }
