@@ -6,9 +6,12 @@
 #![feature(range_contains)]
 #![feature(unique)]
 
+#[macro_use]
+extern crate bitflags;
 extern crate multiboot2;
 extern crate rlibc;
 extern crate spin;
+extern crate x86;
 
 #[macro_use]
 mod vga;
@@ -51,6 +54,8 @@ pub extern fn __main__(multiboot_info_p: usize) {
         multiboot_start, multiboot_end,
         memory_map.memory_areas()
     );
+
+    mem::test_paging(&mut frame_allocator);
 
     for i in 0.. {
         if let None = frame_allocator.alloc() {

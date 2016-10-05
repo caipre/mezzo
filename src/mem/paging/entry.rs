@@ -1,12 +1,9 @@
-#[macro_use]
-extern crate bitflags;
-
 use mem::Frame;
 
 pub struct Entry(u64);
 
 bitflags! {
-    flags EntryFlags: u64 {
+    pub flags EntryFlags: u64 {
         const PRESENT =         1 << 0,
         const WRITABLE =        1 << 1,
         const USER_ACCESSIBLE = 1 << 2,
@@ -42,7 +39,7 @@ impl Entry {
     }
 
 	pub fn set(&mut self, frame: Frame, flags: EntryFlags) {
-		assert!(frame.start_address() & !0x000f_ffff_ffff_f000 == 0);
-		self.0 = (frame.start_address() as u64) | flags.bits();
+		assert!(frame.start() & !0x000f_ffff_ffff_f000 == 0);
+		self.0 = (frame.start() as u64) | flags.bits();
 	}
 }

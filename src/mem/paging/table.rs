@@ -5,8 +5,7 @@ use mem::FrameAllocator;
 use mem::paging::ENTRY_COUNT;
 use mem::paging::entry::*;
 
-pub use self::entry::*;
-pub const P4: *mut Table = 0x000f_ffff_ffff_f000 as *mut Table;
+pub const P4: *mut Table<Level4> = 0x000f_ffff_ffff_f000 as *mut _;
 
 pub trait TableLevel {}
 pub trait HierarchicalLevel: TableLevel {
@@ -27,12 +26,13 @@ impl HierarchicalLevel for Level3 { type NextLevel = Level2; }
 impl HierarchicalLevel for Level2 { type NextLevel = Level1; }
 
 pub struct Table<L: TableLevel> {
-    entries [Entry; ENTRY_COUNT],
+    entries: [Entry; ENTRY_COUNT],
     level: PhantomData<L>
 }
 
 impl<L> Index<usize> for Table<L>
-    where L: TableLevel {
+    where L: TableLevel
+{
     type Output = Entry;
 
     fn index(&self, index: usize) -> &Entry {
@@ -41,20 +41,26 @@ impl<L> Index<usize> for Table<L>
 }
 
 impl<L> IndexMut<usize> for Table<L>
-    where L: TableLevel {
+    where L: TableLevel
+{
     fn index_mut(&mut self, index: usize) -> &mut Entry {
         &mut self.entries[index]
     }
 }
 
 impl<L> Table<L>
-    where L: HierarchicalLevel {
+    where L: TableLevel
+{
     pub fn zero(&mut self) {
         for entry in self.entries.iter_mut() {
             entry.set_unused();
         }
     }
+}
 
+impl<L> Table<L>
+    where L: HierarchicalLevel
+{
     pub fn next_table(&self, index: usize) -> Option<&Table<L::NextLevel>> {
         self.next_table_address(index)
             .map(|address| unsafe { &*(address as *const _) })
@@ -66,7 +72,8 @@ impl<L> Table<L>
     }
 
     pub fn next_table_create<A>(&mut self, index: usize, allocator: &mut A) -> &mut Table<L::NextLevel>
-        where A: FrameAllocator {
+        where A: FrameAllocator
+    {
         if self.next_table(index).is_none() {
             assert!(!self.entries[index].flags().contains(HUGE_PAGE));
             let frame = allocator.alloc().expect("no frames available");
