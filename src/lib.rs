@@ -69,10 +69,10 @@ pub extern fn __main__(multiboot_info_p: usize) {
 }
 
 #[lang = "eh_personality"]
-extern fn eh_personality() {}
+extern "C" fn eh_personality() {}
 
 #[lang = "panic_fmt"]
-extern fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
+extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
     {
         WRITER.lock().set_color(ColorSpec::new(Color::LightRed, Color::Black));
         print!("\n\nkernel panic: ");

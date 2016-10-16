@@ -77,7 +77,7 @@ impl<L> Table<L>
         if self.next_table(index).is_none() {
             assert!(!self.entries[index].flags().contains(HUGE_PAGE));
             let frame = allocator.alloc().expect("no frames available");
-            self.entries[index].set(frame, PRESENT|WRITABLE);
+            self.entries[index].set(frame, PRESENT | WRITABLE);
             self.next_table_mut(index).unwrap().zero();
         }
         self.next_table_mut(index).unwrap()
@@ -85,7 +85,7 @@ impl<L> Table<L>
 
     // TODO: use physical/virtualaddress type alias?
     fn next_table_address(&self, index: usize) -> Option<usize> {
-        let flags = self[index].flags();;
+        let flags = self[index].flags();
         if flags.contains(PRESENT) && !flags.contains(HUGE_PAGE) {
             let table_address = self as *const _ as usize;
             Some((table_address << 9) | (index << 12))

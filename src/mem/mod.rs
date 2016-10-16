@@ -1,6 +1,3 @@
-use core::option::Option;
-
-
 mod area_frame_allocator;
 mod paging;
 

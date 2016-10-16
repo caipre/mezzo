@@ -130,7 +130,7 @@ pub struct Page {
 
 impl Page {
     pub fn containing(address: VirtualAddress) -> Page {
-        assert!(address < 0x0000_8000_0000_0000 || address > 0xffff_8000_0000_0000);
+        assert!(address < 0x0000_8000_0000_0000 || address >= 0xffff_8000_0000_0000);
         Page { number: address / PAGE_SIZE }
     }
 
