@@ -22,13 +22,13 @@ impl TemporaryPage {
         use super::entry::WRITABLE;
 
         assert!(active_table.translate_page(self.page).is_none());
-        active_table.map_to(self.page, frame, WRITEABLE, &mut self.allocator);
+        active_table.map_to(self.page, frame, WRITABLE, &mut self.allocator);
         self.page.start()
     }
 
     pub fn map_table_frame(&mut self, frame: Frame, active_table: &mut ActivePageTable) -> &mut Table<Level1>
     {
-        unsafe { &mut *(self.map(frame, active_table) as &mut Table<Level1>) }
+        unsafe { &mut *(self.map(frame, active_table) as *mut Table<Level1>) }
     }
 
     pub fn unmap(&mut self, active_table: &mut ActivePageTable) {
