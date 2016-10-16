@@ -34,7 +34,40 @@ impl ActivePageTable {
         let p3 = self.p4().next_table(page.p4_index());
 
         let huge_page = || {
-            panic!("huge pages not implemented")
+            p3.and_then(|p3| {
+                let p3_entry = &p3[page.p3_index()];
+
+                // 1gb page?
+                if let Some(frame) = p3_entry.frame() {
+                    if p3_entry.flags().contains(HUGE_PAGE) {
+                        assert!(frame.number % (ENTRY_COUNT * ENTRY_COUNT) == 0);
+                        return Some(
+                            Frame {
+                                number: frame.number +
+                                        page.p2_index() * ENTRY_COUNT +
+                                        page.p1_index()
+
+                        });
+                    }
+                }
+
+                if let Some(p2) = p3.next_table(page.p3_index()) {
+                    let p2_entry = &p2[page.p2_index()];
+                    // 2mb page?
+                    if let Some(frame) = p2_entry.frame() {
+                        if p2_entry.flags().contains(HUGE_PAGE) {
+                            assert!(frame.number % ENTRY_COUNT == 0);
+                            return Some(
+                                Frame {
+                                    number: frame.number +
+                                            page.p1_index()
+                            });
+                        }
+                    }
+                }
+
+                None
+            })
         };
 
         p3.and_then(|p3| p3.next_table(page.p3_index()))
@@ -55,7 +88,7 @@ impl ActivePageTable {
         p1[page.p1_index()].set_unused();
         unsafe { ::x86::shared::tlb::flush(page.start()); }
         // TODO: free p1, p2, p3 table if empty
-        allocator.free(frame);
+        // allocator.free(frame);
     }
 
     pub fn map<A>(&mut self, page: Page, flags: EntryFlags, allocator: &mut A)
@@ -104,8 +137,8 @@ pub fn test_paging<A>(allocator: &mut A)
     assert_eq!(Some(4096), page_table.translate(4096));
     assert_eq!(Some(512*4096), page_table.translate(512*4096));
     assert_eq!(Some(300*512*4096), page_table.translate(300*512*4096));
-    assert_eq!(Some(512*512*4096), page_table.translate(512*512*4096));
-    assert_eq!(None, page_table.translate(512*512*4096 - 1));
+    assert_eq!(None, page_table.translate(512*512*4096));
+    assert_eq!(Some(512*512*4096 - 1), page_table.translate(512*512*4096 - 1));
 
     // test mapping
     let addr = 42 * 512 * 512 * 4096;
