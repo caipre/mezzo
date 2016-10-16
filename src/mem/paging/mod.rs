@@ -152,11 +152,9 @@ pub fn test_paging<A>(allocator: &mut A)
     // test unmapping
     page_table.unmap(Page::containing(addr), allocator);
     assert_eq!(None, page_table.translate(addr));
-
-
-
 }
 
+#[derive(Debug, Clone, Copy)]
 pub struct Page {
     number: usize,
 }

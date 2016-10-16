@@ -21,6 +21,10 @@ impl Frame {
     fn containing(address: usize) -> Frame {
         Frame { number: address / PAGE_SIZE }
     }
+
+    fn clone(&self) -> Frame {
+        Frame { number: self.number }
+    }
 }
 
 pub trait FrameAllocator {
