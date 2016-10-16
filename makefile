@@ -15,6 +15,9 @@ all:: $(kernel)
 clean::
 	@rm -rf build
 
+debug:: $(iso)
+	@qemu-system-x86_64 -d int -no-reboot -cdrom $(iso)
+
 run:: $(iso)
 	@qemu-system-x86_64 -cdrom $(iso)
 
