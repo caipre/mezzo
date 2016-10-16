@@ -49,7 +49,18 @@ pub fn remap_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
                 mapper.identity_map(frame, flags, allocator);
             }
         }
+
+        let vga_buffer_frame = Frame::containing(0xb8000);
+        mapper.identity_map(vga_buffer_frame, WRITABLE, allocator);
+
+        let multiboot_start = Frame::containing(boot_info.start_address());
+        let multiboot_end = Frame::containing(boot_info.end_address() - 1);
+        for frame in Frame::range_inclusive(multiboot_start, multiboot_end) {
+            mapper.identity_map(frame, PRESENT, allocator);
+        }
     });
+
+    let old_table = active_table.switch(new_table);
 }
 
 pub struct ActivePageTable {
@@ -75,6 +86,17 @@ impl ActivePageTable {
         ActivePageTable {
             mapper: Mapper::new(),
         }
+    }
+
+    pub fn switch(&mut self, new_table: InactivePageTable) -> InactivePageTable
+    {
+        let old_table = InactivePageTable {
+            p4_frame: Frame::containing(unsafe { ::x86::shared::control_regs::cr3() } as usize),
+        };
+        unsafe {
+            ::x86::shared::control_regs::cr3_write(new_table.p4_frame.start())
+        }
+        old_table
     }
 
     pub fn with<F>(&mut self, table: &mut InactivePageTable, temporary_page: &mut TemporaryPage, f: F)
