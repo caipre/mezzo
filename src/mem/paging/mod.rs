@@ -42,7 +42,7 @@ pub fn remap_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
             println!("map section at {:#x} of size {:#x}",
                      section.addr, section.size);
 
-            let flags = WRITABLE;
+            let flags = EntryFlags::from_elf_section_flags(section);
             let start = Frame::containing(section.start_address());
             let end = Frame::containing(section.end_address() - 1);
             for frame in Frame::range_inclusive(start, end) {
@@ -61,6 +61,10 @@ pub fn remap_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
     });
 
     let old_table = active_table.switch(new_table);
+
+    let old_p4_page = Page::containing(old_table.p4_frame.start());
+    active_table.unmap(old_p4_page, allocator);
+    println!("guard page at {:#x}", old_p4_page.start());
 }
 
 pub struct ActivePageTable {

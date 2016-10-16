@@ -64,10 +64,29 @@ pub extern fn __main__(multiboot_info_p: usize) {
     //     }
     // }
 
+    enable_nxe_bit();
+    enable_write_protect_bit();
+
     mem::remap_kernel(&mut frame_allocator, boot_info);
     println!("okay!");
 
     loop {}
+}
+
+fn enable_nxe_bit() {
+    use ::x86::shared::msr::{IA32_EFER, rdmsr, wrmsr};
+    let nxe_bit = 1 << 11;
+    unsafe {
+        let efer = rdmsr(IA32_EFER);
+        wrmsr(IA32_EFER, efer | nxe_bit);
+    }
+}
+
+fn enable_write_protect_bit() {
+    use ::x86::shared::control_regs::{CR0_WRITE_PROTECT, cr0, cr0_write};
+    unsafe {
+        cr0_write(cr0() | CR0_WRITE_PROTECT);
+    }
 }
 
 #[lang = "eh_personality"]
