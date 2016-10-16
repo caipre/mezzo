@@ -133,6 +133,11 @@ check_long_mode:
 ; fn setup_paging_tables()
 ;   map p4 -> p3 -> p2 -> physical
 setup_paging_tables:
+	; recursively map p4
+	mov eax, p4_table
+	or eax, 0b11
+	mov [p4_table + 511 * 8], eax
+
    mov eax, p3_table   ; mark p3 as writable and present, and
    or  eax, 0b11       ; add it as the first entry in p4
    mov [p4_table], eax ;
@@ -151,7 +156,7 @@ setup_paging_tables:
 
       inc ecx
       cmp ecx, 512
-      jb  .map_p2_entries
+      jne .map_p2_entries
 
    ret
 
@@ -216,7 +221,7 @@ p2_table:
    resb 4096
 
 stack_bottom:
-   resb 4096
+   resb 4096 * 2
 stack_top:
 
 section .rodata
