@@ -5,7 +5,7 @@ use mem::FrameAllocator;
 use mem::paging::ENTRY_COUNT;
 use mem::paging::entry::*;
 
-pub const P4: *mut Table<Level4> = 0x000f_ffff_ffff_f000 as *mut _;
+pub const P4: *mut Table<Level4> = 0xffff_ffff_ffff_f000 as *mut _;
 
 pub trait TableLevel {}
 pub trait HierarchicalLevel: TableLevel {
