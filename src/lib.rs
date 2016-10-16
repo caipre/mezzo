@@ -57,13 +57,15 @@ pub extern fn __main__(multiboot_info_p: usize) {
 
     mem::test_paging(&mut frame_allocator);
 
-    for i in 0.. {
-        if let None = frame_allocator.alloc() {
-            println!("allocated {} frames", i);
-            break;
-        }
-    }
+    // for i in 0.. {
+    //     if let None = frame_allocator.alloc() {
+    //         println!("allocated {} frames", i);
+    //         break;
+    //     }
+    // }
 
+    mem::remap_kernel(&mut frame_allocator, boot_info);
+    println!("okay!");
 
     loop {}
 }

@@ -1,6 +1,8 @@
 use core::ptr::Unique;
 use core::ops::{Deref, DerefMut};
 
+use multiboot2::BootInformation;
+
 use mem::{PAGE_SIZE, Frame, FrameAllocator};
 use self::entry::*;
 use self::table::{Table, Level4};
@@ -17,6 +19,38 @@ const ENTRY_COUNT: usize = 512;
 
 pub type PhysicalAddress = usize;
 pub type VirtualAddress = usize;
+
+pub fn remap_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
+    where A: FrameAllocator
+{
+    let mut temporary_page = TemporaryPage::new(Page { number: 0xcafebabe }, allocator);
+
+    let mut active_table = unsafe { ActivePageTable::new() };
+    let mut new_table = {
+        let frame = allocator.alloc().expect("no frames available");
+        InactivePageTable::new(frame, &mut active_table, &mut temporary_page)
+    };
+
+    active_table.with(&mut new_table, &mut temporary_page, |mapper| {
+        use self::entry::WRITABLE;
+        let elf = boot_info.elf_sections_tag().expect("memory map tag missing");
+        for section in elf.sections() {
+            if !section.is_allocated() {
+                continue;
+            }
+            assert!(section.addr as usize % PAGE_SIZE == 0);
+            println!("map section at {:#x} of size {:#x}",
+                     section.addr, section.size);
+
+            let flags = WRITABLE;
+            let start = Frame::containing(section.start_address());
+            let end = Frame::containing(section.end_address() - 1);
+            for frame in Frame::range_inclusive(start, end) {
+                mapper.identity_map(frame, flags, allocator);
+            }
+        }
+    });
+}
 
 pub struct ActivePageTable {
     mapper: Mapper,
