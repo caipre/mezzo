@@ -1,5 +1,6 @@
 #![no_std]
 
+#![feature(asm)]
 #![feature(alloc)]
 #![feature(associated_consts)]
 #![feature(collections)]
@@ -14,6 +15,9 @@ extern crate collections;
 
 #[macro_use]
 extern crate bitflags;
+extern crate bit_field;
+#[macro_use]
+extern crate lazy_static;
 extern crate multiboot2;
 #[macro_use]
 extern crate once;
@@ -32,6 +36,8 @@ use vga::*;
 mod mem;
 use mem::*;
 
+mod int;
+
 #[no_mangle]
 pub extern fn __main__(multiboot_info_p: usize) {
     WRITER.lock().clear();
@@ -44,6 +50,7 @@ pub extern fn __main__(multiboot_info_p: usize) {
     enable_write_protect_bit();
 
     mem::init(boot_info);
+    int::init();
 
     loop {}
 }
@@ -69,12 +76,8 @@ extern "C" fn eh_personality() {}
 
 #[lang = "panic_fmt"]
 extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
-    {
-        WRITER.lock().set_color(ColorSpec::new(Color::LightRed, Color::Black));
-        print!("\n\nkernel panic: ");
-        WRITER.lock().set_color(ColorSpec::default());
-        println!("{}:{}", file, line);
-        println!("   {}", fmt);
+    unsafe {
+        vga::kerror(format_args!("{}:{}\n   {}", file, line, fmt));
     }
     loop {}
 }

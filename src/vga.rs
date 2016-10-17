@@ -1,9 +1,10 @@
 // use core::default::Default;    // not useful without const trait fns
 
 use core::cmp::{min,max};
-use core::ptr::Unique;
-use core::option::Option;
+use core::fmt;
 use core::ops::{Index, IndexMut};
+use core::option::Option;
+use core::ptr::Unique;
 
 use spin::Mutex;
 
@@ -210,3 +211,14 @@ macro_rules! print {
     });
 }
 
+pub unsafe fn kerror(fmt: fmt::Arguments) {
+    use core::fmt::Write;
+    let mut writer = Writer {
+        col: 0, row: 0,
+        color_spec: ColorSpec::new(Color::LightRed, Color::Black),
+        buffer: Unique::new(0xb8000 as *mut _),
+    };
+    writer.write_str("\n\nkernel panic: ").unwrap();
+    writer.set_color(ColorSpec::default());
+    writer.write_fmt(fmt).unwrap();
+}
