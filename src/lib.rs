@@ -21,7 +21,7 @@ extern crate rlibc;
 extern crate spin;
 extern crate x86;
 
-extern crate bumpalloc;
+extern crate holealloc;
 
 use alloc::boxed::Box;
 

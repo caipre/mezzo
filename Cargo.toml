@@ -13,6 +13,9 @@ spin = "^0.3.5"
 [dependencies.bumpalloc]
 path = "libs/bumpalloc"
 
+[dependencies.holealloc]
+path = "libs/holealloc"
+
 [dependencies.x86]
 default-features = false
 version = "^0.8.0"

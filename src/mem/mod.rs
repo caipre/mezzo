@@ -30,7 +30,7 @@ pub fn init(boot_info: &BootInformation) {
     let mut active_table = paging::remap_kernel(&mut frame_allocator, boot_info);
 
     use self::paging::Page;
-    use bumpalloc::{HEAP_START, HEAP_SIZE};
+    use holealloc::{HEAP_START, HEAP_SIZE};
 
     let heap_start_page = Page::containing(HEAP_START);
     let heap_end_page = Page::containing(HEAP_START + HEAP_SIZE - 1);
