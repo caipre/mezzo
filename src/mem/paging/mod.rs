@@ -4,7 +4,7 @@ use core::ops::{Deref, DerefMut};
 use multiboot2::BootInformation;
 
 use mem::{PAGE_SIZE, Frame, FrameAllocator};
-use self::entry::*;
+pub use self::entry::*;
 use self::table::{Table, Level4};
 use self::tpage::TemporaryPage;
 
@@ -20,7 +20,7 @@ const ENTRY_COUNT: usize = 512;
 pub type PhysicalAddress = usize;
 pub type VirtualAddress = usize;
 
-pub fn remap_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
+pub fn remap_kernel<A>(allocator: &mut A, boot_info: &BootInformation) -> ActivePageTable
     where A: FrameAllocator
 {
     let mut temporary_page = TemporaryPage::new(Page { number: 0xcafebabe }, allocator);
@@ -39,8 +39,6 @@ pub fn remap_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
                 continue;
             }
             assert!(section.addr as usize % PAGE_SIZE == 0);
-            println!("map section at {:#x} of size {:#x}",
-                     section.addr, section.size);
 
             let flags = EntryFlags::from_elf_section_flags(section);
             let start = Frame::containing(section.start_address());
@@ -64,7 +62,8 @@ pub fn remap_kernel<A>(allocator: &mut A, boot_info: &BootInformation)
 
     let old_p4_page = Page::containing(old_table.p4_frame.start());
     active_table.unmap(old_p4_page, allocator);
-    println!("guard page at {:#x}", old_p4_page.start());
+
+    active_table
 }
 
 pub struct ActivePageTable {
@@ -138,7 +137,7 @@ impl InactivePageTable {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Page {
     number: usize,
 }
@@ -147,6 +146,13 @@ impl Page {
     pub fn containing(address: VirtualAddress) -> Page {
         assert!(address < 0x0000_8000_0000_0000 || address >= 0xffff_8000_0000_0000);
         Page { number: address / PAGE_SIZE }
+    }
+
+    pub fn range_inclusive(start: Page, end: Page) -> PageIter {
+        PageIter {
+            start: start,
+            end: end,
+        }
     }
 
     pub fn start(&self) -> usize {
@@ -167,6 +173,25 @@ impl Page {
 
     fn p1_index(&self) -> usize {
         (self.number >> 0) & 0o777
+    }
+}
+
+pub struct PageIter {
+    start: Page,
+    end: Page,
+}
+
+impl Iterator for PageIter {
+    type Item = Page;
+
+    fn next(&mut self) -> Option<Page> {
+        if self.start <= self.end {
+            let page = self.start;
+            self.start.number += 1;
+            Some(page)
+        } else {
+            None
+        }
     }
 }
 

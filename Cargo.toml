@@ -1,23 +1,31 @@
 [package]
+authors = ["Nick Platt <platt.nicholas@gmail.com>"]
 name = "mezzo"
 version = "0.1.0"
-authors = ["Nick Platt <platt.nicholas@gmail.com>"]
+
+[dependencies]
+bitflags = "^0.7.0"
+multiboot2 = "^0.1.0"
+once = "0.3.2"
+rlibc = "^1.0.0"
+spin = "^0.3.5"
+
+[dependencies.bumpalloc]
+path = "libs/bumpalloc"
+
+[dependencies.x86]
+default-features = false
+version = "^0.8.0"
 
 [lib]
 crate-type = ["staticlib"]
 
-[dependencies]
-bitflags = "^0.7.0"
-multiboot2  = "^0.1.0"
-rlibc = "^1.0.0"
-spin = "^0.3.5"
-
-[dependencies.x86]
-version = "^0.8.0"
-default-features = false
+[profile]
 
 [profile.dev]
 panic = "abort"
 
 [profile.release]
 panic = "abort"
+
+[workspace]
