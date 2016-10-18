@@ -1,5 +1,5 @@
 arch ?= x86_64
-target ?= $(arch)-unknown-linux-gnu
+target ?= $(arch)-mezzo
 kernel := build/kernel-$(arch).bin
 mezzo := target/$(target)/debug/libmezzo.a
 iso := build/os-$(arch).iso
@@ -34,7 +34,7 @@ $(kernel): cargo $(mezzo) $(assembly_objects) $(linker_script)
 	@ld --nmagic --script $(linker_script) --gc-sections -o $(kernel) $(assembly_objects) $(mezzo)
 
 cargo:
-	@cargo rustc --target $(target) -- -C no-redzone
+	@xargo build --target $(target)
 
 build/arch/$(arch)/%.o: src/arch/$(arch)/%.asm
 	@mkdir -p $(shell dirname $@)

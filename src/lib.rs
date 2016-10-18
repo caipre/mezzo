@@ -25,6 +25,7 @@ extern crate multiboot2;
 extern crate once;
 extern crate rlibc;
 extern crate spin;
+#[macro_use]
 extern crate x86;
 
 extern crate holealloc;
@@ -53,6 +54,10 @@ pub extern fn __main__(multiboot_info_p: usize) {
 
     mem::init(boot_info);
     int::init();
+
+    unsafe { int!(3) };
+    unsafe { *(0xdeadbeef as *mut u64) = 42 };
+    println!("it did not crash");
 
     loop {}
 }
