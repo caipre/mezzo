@@ -1,11 +1,13 @@
 #![no_std]
 
-#![feature(asm)]
 #![feature(alloc)]
+#![feature(asm)]
 #![feature(associated_consts)]
 #![feature(collections)]
 #![feature(const_fn)]
+#![feature(core_intrinsics)]
 #![feature(lang_items)]
+#![feature(naked_functions)]
 #![feature(range_contains)]
 #![feature(unique)]
 

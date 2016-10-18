@@ -218,7 +218,7 @@ pub unsafe fn kerror(fmt: fmt::Arguments) {
         color_spec: ColorSpec::new(Color::LightRed, Color::Black),
         buffer: Unique::new(0xb8000 as *mut _),
     };
-    writer.write_str("\n\nkernel panic: ").unwrap();
+    writer.write_str("\n\nkernel error: ").unwrap();
     writer.set_color(ColorSpec::default());
     writer.write_fmt(fmt).unwrap();
 }
