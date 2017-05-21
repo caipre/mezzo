@@ -11,9 +11,7 @@ pub struct Mapper {
 
 impl Mapper {
     pub unsafe fn new() -> Mapper {
-        Mapper {
-            p4: Unique::new(table::P4),
-        }
+        Mapper { p4: Unique::new(table::P4) }
     }
 
     pub fn p4(&self) -> &Table<Level4> {
@@ -42,13 +40,10 @@ impl Mapper {
                 if let Some(frame) = p3_entry.frame() {
                     if p3_entry.flags().contains(HUGE_PAGE) {
                         assert!(frame.number % (ENTRY_COUNT * ENTRY_COUNT) == 0);
-                        return Some(
-                            Frame {
-                                number: frame.number +
-                                        page.p2_index() * ENTRY_COUNT +
-                                        page.p1_index()
-
-                        });
+                        return Some(Frame {
+                                        number: frame.number + page.p2_index() * ENTRY_COUNT +
+                                                page.p1_index(),
+                                    });
                     }
                 }
 
@@ -58,11 +53,7 @@ impl Mapper {
                     if let Some(frame) = p2_entry.frame() {
                         if p2_entry.flags().contains(HUGE_PAGE) {
                             assert!(frame.number % ENTRY_COUNT == 0);
-                            return Some(
-                                Frame {
-                                    number: frame.number +
-                                            page.p1_index()
-                            });
+                            return Some(Frame { number: frame.number + page.p1_index() });
                         }
                     }
                 }
@@ -81,13 +72,16 @@ impl Mapper {
         where A: FrameAllocator
     {
         assert!(self.translate(page.start()).is_some());
-        let p1 = self.p4_mut().next_table_mut(page.p4_index())
-                              .and_then(|p3| p3.next_table_mut(page.p3_index()))
-                              .and_then(|p2| p2.next_table_mut(page.p2_index()))
-                              .expect("mapping code does not support huge pages");
+        let p1 = self.p4_mut()
+            .next_table_mut(page.p4_index())
+            .and_then(|p3| p3.next_table_mut(page.p3_index()))
+            .and_then(|p2| p2.next_table_mut(page.p2_index()))
+            .expect("mapping code does not support huge pages");
         let _ = p1[page.p1_index()].frame().unwrap();
         p1[page.p1_index()].set_unused();
-        unsafe { ::x86::shared::tlb::flush(page.start()); }
+        unsafe {
+            ::x86::shared::tlb::flush(page.start());
+        }
         // TODO: free p1, p2, p3 table if empty
         // allocator.free(frame);
     }
@@ -115,6 +109,6 @@ impl Mapper {
         let mut p1 = p2.next_table_create(page.p2_index(), allocator);
 
         assert!(p1[page.p1_index()].is_unused());
-        p1[page.p1_index()].set(frame, flags|PRESENT);
+        p1[page.p1_index()].set(frame, flags | PRESENT);
     }
 }

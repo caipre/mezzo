@@ -73,8 +73,7 @@ impl EntryOptions {
 
     fn new() -> EntryOptions {
         let mut options = EntryOptions::minimal();
-        options.present(true)
-               .interruptible(false);
+        options.present(true).interruptible(false);
         options
     }
 

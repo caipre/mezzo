@@ -21,13 +21,19 @@ impl TableLevel for Level4 {}
 impl TableLevel for Level3 {}
 impl TableLevel for Level2 {}
 impl TableLevel for Level1 {}
-impl HierarchicalLevel for Level4 { type NextLevel = Level3; }
-impl HierarchicalLevel for Level3 { type NextLevel = Level2; }
-impl HierarchicalLevel for Level2 { type NextLevel = Level1; }
+impl HierarchicalLevel for Level4 {
+    type NextLevel = Level3;
+}
+impl HierarchicalLevel for Level3 {
+    type NextLevel = Level2;
+}
+impl HierarchicalLevel for Level2 {
+    type NextLevel = Level1;
+}
 
 pub struct Table<L: TableLevel> {
     entries: [Entry; ENTRY_COUNT],
-    level: PhantomData<L>
+    level: PhantomData<L>,
 }
 
 impl<L> Index<usize> for Table<L>
@@ -66,12 +72,15 @@ impl<L> Table<L>
             .map(|address| unsafe { &*(address as *const _) })
     }
 
-    pub fn next_table_mut(&mut self, index: usize) ->Option<&mut Table<L::NextLevel>> {
+    pub fn next_table_mut(&mut self, index: usize) -> Option<&mut Table<L::NextLevel>> {
         self.next_table_address(index)
             .map(|address| unsafe { &mut *(address as *mut _) })
     }
 
-    pub fn next_table_create<A>(&mut self, index: usize, allocator: &mut A) -> &mut Table<L::NextLevel>
+    pub fn next_table_create<A>(&mut self,
+                                index: usize,
+                                allocator: &mut A)
+                                -> &mut Table<L::NextLevel>
         where A: FrameAllocator
     {
         if self.next_table(index).is_none() {

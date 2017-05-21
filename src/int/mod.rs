@@ -131,18 +131,20 @@ extern "C" fn divide_by_zero(stack_frame: *const ExceptionStackFrame) {
     loop {}
 }
 
-extern "C" fn invalid_opcode(stack_frame: *const ExceptionStackFrame)  {
+extern "C" fn invalid_opcode(stack_frame: *const ExceptionStackFrame) {
     unsafe {
         kerror(format_args!("invalid opcode at {:#x}\n{:#?}",
-                            (*stack_frame).ip, *stack_frame));
+                            (*stack_frame).ip,
+                            *stack_frame));
     };
     loop {}
 }
 
-extern "C" fn breakpoint(stack_frame: *const ExceptionStackFrame)  {
+extern "C" fn breakpoint(stack_frame: *const ExceptionStackFrame) {
     unsafe {
         kerror(format_args!("breakpoint at {:#x}\n{:#?}",
-                            (*stack_frame).ip, *stack_frame));
+                            (*stack_frame).ip,
+                            *stack_frame));
     };
 }
 

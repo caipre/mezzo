@@ -31,7 +31,9 @@ pub fn remap_kernel<A>(allocator: &mut A, boot_info: &BootInformation) -> Active
 
     active_table.with(&mut new_table, &mut temporary_page, |mapper| {
         use self::entry::WRITABLE;
-        let elf = boot_info.elf_sections_tag().expect("memory map tag missing");
+        let elf = boot_info
+            .elf_sections_tag()
+            .expect("memory map tag missing");
         for section in elf.sections() {
             if !section.is_allocated() {
                 continue;
@@ -84,23 +86,21 @@ impl DerefMut for ActivePageTable {
 
 impl ActivePageTable {
     unsafe fn new() -> ActivePageTable {
-        ActivePageTable {
-            mapper: Mapper::new(),
-        }
+        ActivePageTable { mapper: Mapper::new() }
     }
 
-    pub fn switch(&mut self, new_table: InactivePageTable) -> InactivePageTable
-    {
+    pub fn switch(&mut self, new_table: InactivePageTable) -> InactivePageTable {
         let old_table = InactivePageTable {
             p4_frame: Frame::containing(unsafe { ::x86::shared::control_regs::cr3() } as usize),
         };
-        unsafe {
-            ::x86::shared::control_regs::cr3_write(new_table.p4_frame.start())
-        }
+        unsafe { ::x86::shared::control_regs::cr3_write(new_table.p4_frame.start()) }
         old_table
     }
 
-    pub fn with<F>(&mut self, table: &mut InactivePageTable, temporary_page: &mut TemporaryPage, f: F)
+    pub fn with<F>(&mut self,
+                   table: &mut InactivePageTable,
+                   temporary_page: &mut TemporaryPage,
+                   f: F)
         where F: FnOnce(&mut Mapper)
     {
         {
@@ -108,11 +108,15 @@ impl ActivePageTable {
             let p4_table = temporary_page.map_table_frame(backup.clone(), self);
 
             self.p4_mut()[511].set(table.p4_frame.clone(), PRESENT | WRITABLE);
-            unsafe { ::x86::shared::tlb::flush_all(); }
+            unsafe {
+                ::x86::shared::tlb::flush_all();
+            }
             f(self);
 
             p4_table[511].set(backup, PRESENT | WRITABLE);
-            unsafe { ::x86::shared::tlb::flush_all(); }
+            unsafe {
+                ::x86::shared::tlb::flush_all();
+            }
         }
         temporary_page.unmap(self);
     }
@@ -123,7 +127,10 @@ pub struct InactivePageTable {
 }
 
 impl InactivePageTable {
-    pub fn new(frame: Frame, active_table: &mut ActivePageTable, temporary_page: &mut TemporaryPage) -> InactivePageTable {
+    pub fn new(frame: Frame,
+               active_table: &mut ActivePageTable,
+               temporary_page: &mut TemporaryPage)
+               -> InactivePageTable {
         {
             let table = temporary_page.map_table_frame(frame.clone(), active_table);
             table.zero();
@@ -201,10 +208,12 @@ pub fn test_paging<A>(allocator: &mut A)
     // test translation
     assert_eq!(Some(0), page_table.translate(0));
     assert_eq!(Some(4096), page_table.translate(4096));
-    assert_eq!(Some(512*4096), page_table.translate(512*4096));
-    assert_eq!(Some(300*512*4096), page_table.translate(300*512*4096));
-    assert_eq!(None, page_table.translate(512*512*4096));
-    assert_eq!(Some(512*512*4096 - 1), page_table.translate(512*512*4096 - 1));
+    assert_eq!(Some(512 * 4096), page_table.translate(512 * 4096));
+    assert_eq!(Some(300 * 512 * 4096),
+               page_table.translate(300 * 512 * 4096));
+    assert_eq!(None, page_table.translate(512 * 512 * 4096));
+    assert_eq!(Some(512 * 512 * 4096 - 1),
+               page_table.translate(512 * 512 * 4096 - 1));
 
     // test mapping
     let addr = 42 * 512 * 512 * 4096;

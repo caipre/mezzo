@@ -17,15 +17,21 @@ pub fn init(boot_info: &BootInformation) {
     let elf = boot_info.elf_sections_tag().expect("no elf-sections");
 
     let kernel_start = elf.sections()
-        .filter(|s| s.is_allocated()).map(|s| s.start_address()).min().unwrap();
+        .filter(|s| s.is_allocated())
+        .map(|s| s.start_address())
+        .min()
+        .unwrap();
     let kernel_end = elf.sections()
-        .filter(|s| s.is_allocated()).map(|s| s.end_address()).max().unwrap();
+        .filter(|s| s.is_allocated())
+        .map(|s| s.end_address())
+        .max()
+        .unwrap();
 
-    let mut frame_allocator = AreaFrameAllocator::new(
-        kernel_start, kernel_end,
-        boot_info.start_address(), boot_info.end_address(),
-        memory_map.memory_areas()
-    );
+    let mut frame_allocator = AreaFrameAllocator::new(kernel_start,
+                                                      kernel_end,
+                                                      boot_info.start_address(),
+                                                      boot_info.end_address(),
+                                                      memory_map.memory_areas());
 
     let mut active_table = paging::remap_kernel(&mut frame_allocator, boot_info);
 
@@ -82,7 +88,6 @@ impl Iterator for FrameIter {
             None
         }
     }
-
 }
 
 pub trait FrameAllocator {

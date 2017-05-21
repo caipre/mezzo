@@ -45,7 +45,7 @@ impl Entry {
         self.0 = 0;
     }
 
-	pub fn flags(&self) -> EntryFlags {
+    pub fn flags(&self) -> EntryFlags {
         EntryFlags::from_bits_truncate(self.0)
     }
 
@@ -57,8 +57,8 @@ impl Entry {
         }
     }
 
-	pub fn set(&mut self, frame: Frame, flags: EntryFlags) {
-		assert!(frame.start() & !0x000f_ffff_ffff_f000 == 0);
-		self.0 = (frame.start() as u64) | flags.bits();
-	}
+    pub fn set(&mut self, frame: Frame, flags: EntryFlags) {
+        assert!(frame.start() & !0x000f_ffff_ffff_f000 == 0);
+        self.0 = (frame.start() as u64) | flags.bits();
+    }
 }

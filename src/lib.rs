@@ -41,12 +41,10 @@ use mem::*;
 mod int;
 
 #[no_mangle]
-pub extern fn __main__(multiboot_info_p: usize) {
+pub extern "C" fn __main__(multiboot_info_p: usize) {
     WRITER.lock().clear();
 
-    let boot_info = unsafe {
-        multiboot2::load(multiboot_info_p)
-    };
+    let boot_info = unsafe { multiboot2::load(multiboot_info_p) };
 
     enable_nxe_bit();
     enable_write_protect_bit();
@@ -62,7 +60,7 @@ pub extern fn __main__(multiboot_info_p: usize) {
 }
 
 fn enable_nxe_bit() {
-    use ::x86::shared::msr::{IA32_EFER, rdmsr, wrmsr};
+    use x86::shared::msr::{IA32_EFER, rdmsr, wrmsr};
     let nxe_bit = 1 << 11;
     unsafe {
         let efer = rdmsr(IA32_EFER);
@@ -71,7 +69,7 @@ fn enable_nxe_bit() {
 }
 
 fn enable_write_protect_bit() {
-    use ::x86::shared::control_regs::{CR0_WRITE_PROTECT, cr0, cr0_write};
+    use x86::shared::control_regs::{CR0_WRITE_PROTECT, cr0, cr0_write};
     unsafe {
         cr0_write(cr0() | CR0_WRITE_PROTECT);
     }

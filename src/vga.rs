@@ -1,6 +1,6 @@
 // use core::default::Default;    // not useful without const trait fns
 
-use core::cmp::{min,max};
+use core::cmp::{min, max};
 use core::fmt;
 use core::ops::{Index, IndexMut};
 use core::option::Option;
@@ -46,7 +46,10 @@ struct VgaChar {
 
 impl VgaChar {
     const fn default() -> VgaChar {
-        VgaChar { char: b' ', spec: ColorSpec::default() }
+        VgaChar {
+            char: b' ',
+            spec: ColorSpec::default(),
+        }
     }
 }
 
@@ -94,7 +97,8 @@ pub trait AlignCol {
 }
 
 pub struct Writer {
-    row: usize, col: usize,
+    row: usize,
+    col: usize,
     color_spec: ColorSpec,
     buffer: Unique<VgaBuffer>,
 }
@@ -104,7 +108,8 @@ pub static WRITER: Mutex<Writer> = Mutex::new(Writer::new());
 impl Writer {
     const fn new() -> Writer {
         Writer {
-            row: 0, col: 0,
+            row: 0,
+            col: 0,
             color_spec: ColorSpec::default(),
             buffer: unsafe { Unique::new(VgaBuffer::buffer()) },
         }
@@ -193,7 +198,7 @@ impl AlignCol for Writer {
 impl ::core::fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> ::core::fmt::Result {
         for byte in s.bytes() {
-          self.write_byte(byte, None)
+            self.write_byte(byte, None)
         }
         Ok(())
     }
@@ -214,7 +219,8 @@ macro_rules! print {
 pub unsafe fn kerror(fmt: fmt::Arguments) {
     use core::fmt::Write;
     let mut writer = Writer {
-        col: 0, row: 0,
+        col: 0,
+        row: 0,
         color_spec: ColorSpec::new(Color::LightRed, Color::Black),
         buffer: Unique::new(0xb8000 as *mut _),
     };

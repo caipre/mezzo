@@ -17,8 +17,7 @@ impl TemporaryPage {
         }
     }
 
-    pub fn map(&mut self, frame: Frame, active_table: &mut ActivePageTable) -> VirtualAddress
-    {
+    pub fn map(&mut self, frame: Frame, active_table: &mut ActivePageTable) -> VirtualAddress {
         use super::entry::WRITABLE;
 
         assert!(active_table.translate_page(self.page).is_none());
@@ -26,8 +25,10 @@ impl TemporaryPage {
         self.page.start()
     }
 
-    pub fn map_table_frame(&mut self, frame: Frame, active_table: &mut ActivePageTable) -> &mut Table<Level1>
-    {
+    pub fn map_table_frame(&mut self,
+                           frame: Frame,
+                           active_table: &mut ActivePageTable)
+                           -> &mut Table<Level1> {
         unsafe { &mut *(self.map(frame, active_table) as *mut Table<Level1>) }
     }
 
