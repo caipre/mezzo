@@ -17,11 +17,11 @@ impl Mapper {
     }
 
     pub fn p4(&self) -> &Table<Level4> {
-        unsafe { self.p4.get() }
+        unsafe { self.p4.as_ref() }
     }
 
     pub fn p4_mut(&mut self) -> &mut Table<Level4> {
-        unsafe { self.p4.get_mut() }
+        unsafe { self.p4.as_mut() }
     }
 
     pub fn translate(&self, vaddr: VirtualAddress) -> Option<PhysicalAddress> {
@@ -85,7 +85,7 @@ impl Mapper {
                               .and_then(|p3| p3.next_table_mut(page.p3_index()))
                               .and_then(|p2| p2.next_table_mut(page.p2_index()))
                               .expect("mapping code does not support huge pages");
-        let frame = p1[page.p1_index()].frame().unwrap();
+        let _ = p1[page.p1_index()].frame().unwrap();
         p1[page.p1_index()].set_unused();
         unsafe { ::x86::shared::tlb::flush(page.start()); }
         // TODO: free p1, p2, p3 table if empty

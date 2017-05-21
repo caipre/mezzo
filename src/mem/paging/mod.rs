@@ -1,11 +1,9 @@
-use core::ptr::Unique;
 use core::ops::{Deref, DerefMut};
 
 use multiboot2::BootInformation;
 
 use mem::{PAGE_SIZE, Frame, FrameAllocator};
 pub use self::entry::*;
-use self::table::{Table, Level4};
 use self::tpage::TemporaryPage;
 
 pub use self::mapper::Mapper;

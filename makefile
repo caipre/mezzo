@@ -13,13 +13,14 @@ assembly_objects := $(patsubst src/arch/$(arch)/%.asm, \
 all:: $(kernel)
 
 clean::
+	@cargo clean
 	@rm -rf build
-
-debug:: $(iso)
-	@qemu-system-x86_64 -d int -no-reboot -cdrom $(iso)
 
 run:: $(iso)
 	@qemu-system-x86_64 -cdrom $(iso)
+
+debug:: $(iso)
+	@qemu-system-x86_64 -d int -no-reboot -cdrom $(iso)
 
 iso:: $(iso)
 

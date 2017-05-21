@@ -30,7 +30,6 @@ extern crate x86;
 
 extern crate holealloc;
 
-use alloc::boxed::Box;
 
 #[macro_use]
 mod vga;
@@ -81,8 +80,10 @@ fn enable_write_protect_bit() {
 #[lang = "eh_personality"]
 extern "C" fn eh_personality() {}
 
+#[cfg(not(test))]
 #[lang = "panic_fmt"]
-extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &str, line: u32) -> ! {
+#[no_mangle]
+pub extern "C" fn panic_fmt(fmt: core::fmt::Arguments, file: &'static str, line: u32) -> ! {
     unsafe {
         vga::kerror(format_args!("{}:{}\n   {}", file, line, fmt));
     }

@@ -88,15 +88,15 @@ impl EntryOptions {
         self
     }
 
-    pub fn set_privilege_level(&mut self, dpl: u16) -> &mut EntryOptions {
-        self.0.set_range(13..15, dpl);
-        self
-    }
-
-    pub fn set_stack_index(&mut self, index: u16) -> &mut EntryOptions {
-        self.0.set_range(0..3, index);
-        self
-    }
+//    pub fn set_privilege_level(&mut self, dpl: u16) -> &mut EntryOptions {
+//        self.0.set_range(13..15, dpl);
+//        self
+//    }
+//
+//    pub fn set_stack_index(&mut self, index: u16) -> &mut EntryOptions {
+//        self.0.set_range(0..3, index);
+//        self
+//    }
 }
 
 pub type HandlerFunc = extern "C" fn() -> !;
